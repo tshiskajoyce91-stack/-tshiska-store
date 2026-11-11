@@ -159,12 +159,38 @@ input[aria-invalid="true"]{border-color:#B3261E;box-shadow:0 0 0 3px rgba(179,38
 .rv{opacity:0;transform:translateY(16px);transition:opacity .7s cubic-bezier(.16,1,.3,1),transform .7s cubic-bezier(.16,1,.3,1)}
 .rv.in{opacity:1;transform:none}
 @media (prefers-reduced-motion:reduce){.rv{opacity:1;transform:none;transition:none}}
+
+/* Panier Tshiska Store */
+.cart-nav{position:relative;display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:8px 13px;font:inherit;font-size:14px;font-weight:700;cursor:pointer}
+.cart-count{display:inline-grid;place-items:center;min-width:21px;height:21px;padding:0 5px;border-radius:999px;background:var(--acc);color:#fff;font-size:12px}
+.add-cart{width:100%;border:0;cursor:pointer;font:inherit}
+.cart-backdrop{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.62);display:none;align-items:flex-end;justify-content:center;padding:16px}
+.cart-backdrop.open{display:flex}
+.cart-panel{width:min(100%,620px);max-height:min(86dvh,760px);overflow:auto;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:24px;padding:22px;box-shadow:0 24px 80px rgba(0,0,0,.35);animation:cartIn .22s ease-out}
+@keyframes cartIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+.cart-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.cart-head h2{font-size:1.7rem;margin:0}
+.cart-close{border:1px solid var(--line);background:var(--card);color:var(--ink);width:40px;height:40px;border-radius:50%;font-size:22px;cursor:pointer}
+.cart-empty{padding:28px 10px;text-align:center;color:var(--soft)}
+.cart-line{display:grid;grid-template-columns:1fr auto;gap:10px;padding:14px 0;border-bottom:1px solid var(--line)}
+.cart-line strong{display:block}.cart-line small{color:var(--soft)}
+.cart-controls{display:flex;align-items:center;gap:8px;margin-top:9px}
+.cart-controls button{min-width:34px;height:34px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:9px;font:inherit;cursor:pointer}
+.cart-remove{color:#c43d32!important}
+.cart-line-price{font-weight:700;white-space:nowrap}
+.cart-total{display:flex;justify-content:space-between;gap:12px;padding:18px 0;font-size:1.2rem;font-weight:800}
+.cart-actions{display:grid;gap:10px}
+.cart-actions .bt{width:100%;text-align:center}
+.cart-note{font-size:13px;color:var(--soft);margin:10px 0 0}
+@media(max-width:720px){nav .w>a.bt{display:none}nav .cart-nav{padding:7px 10px;font-size:13px}.cart-backdrop{padding:8px}.cart-panel{padding:18px;border-radius:20px}}
+@media(prefers-reduced-motion:reduce){.cart-panel{animation:none}}
+
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,200..800&display=swap">
 </head>
 <body>
 <a class="sk" href="#catalogue">Aller au catalogue</a>
-<nav><div class="w"><a class="br" href="#"><img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAoHBwgHBgoICAgLCgoLDhgQDg0NDh0VFhEYIx8lJCIfIiEmKzcvJik0KSEiMEExNDk7Pj4+JS5ESUM8SDc9Pjv/2wBDAQoLCw4NDhwQEBw7KCIoOzs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozv/wAARCABEAEADASIAAhEBAxEB/8QAHAAAAQUBAQEAAAAAAAAAAAAAAAEEBQYHCAMC/8QANxAAAgEEAAMEBgcJAAAAAAAAAQIDAAQFEQYhMRIiQVEHFGFxgZETNkJ0obPRFkNiZJKiscHh/8QAGAEAAwEBAAAAAAAAAAAAAAAAAAQFAwH/xAAmEQABBAIBAwMFAAAAAAAAAAACAAEDBBEhMQVR8BITgUGRwdHh/9oADAMBAAIRAxEAPwDYqKXVGq4ur4WSN3dFdWZDpgDzX31GZ7NLiII+yoeaQ91T00Op/wBVE8QyPiOIbfKRRhxJEVZSSASOXh7CPlUBk85eZURpc9jsxbICLrZNSbV/22KNtE3Cr1en+44SPsX5/X3WiWtzFeWsdzCdxyLta9FdGZlV1LJyYA8x76olnxZe21ots8cckaRmMdVPsOx5VZOFbYwYOJ232p2MpJ6nfIfgK3r3BnJhHttL2aRQC5F30piilo1T6QTfJevDHTnG/Q+uBCYROCULeAOiDo+dYtdemriu0u5bW4xOPimhcpJG6SbVh1B71bnVey/AXC+cv2v8jiY5rlwA8gd1La5DfZI2fbXVxZHc+mfN3UYW5xGImCnYDxOdf3V74j0hZnMXIht+HMEAvOSRoH7KD2978KoF5BHHnJrZF1El20YXf2Q5GvlW4XWM4e4YvpcfYYCER6V2YzybJI99J3CCONzw2e7snaQHLIwZfHOGf+svOPOnkJMRi2bxKwEA/DZp/HxnexxiNLS1VVGlVQwAHzqUwmFxWTxy3cmNjj7bEKqyueQOvE1IfsthevqK/wBbfrU6OtbJmMDbfnZUpbNMScDB9fP5Ubhc/lMveiJbe3WNecrgN3R8+pq0apvZ2Frj4jFaQrEhOyBs7PxpxVWvHIAYkLLqRYkjM8xjhktJS0GmEuuTr36zT/fm/MNb/wAa4yX6ZMjEhaPshJdfZ10Pu8KwC9+stx9+b8w11gyqykMAQeRB8awswNPG4OmKth68jGyz/BcSS4iMwSR/TW5O+yDplPjr9KuOPzmPyQAgnAkP7t+63y8fhUZkuDbS5Jks29WkPPs62h+Hh8KqeRxN9inAuYiqk92RDtSfYfOo7SW6TYJvULeeZVl46l58g/pJ/OPr8LT6KrHCeclu92N25eRF7Ubnqw8QfaKs9WYJhmBjFRZ4CgkcCRRRRWywXJ1/9Zbgfzz/AJhrqy4uYLSEy3EqxRggFmOhzrIOPPRZJaXzZ3AI0sLSiS4tBsshLbLJ5jxI6jw5dL/xRiclkmSS2dZIYxygHI78/I1jYkOONyAcutq8YSSMJlhlY0kSVA8bB1PRlOwah+Kri3hwc0cxHbl0sanqW31+FUpo8lj2KBLq3P8ACGX/ABSw43KZKXaW88rH7bg6HvJqRJ1E5AeNo9vpWY+mhGbSPJpt+bTzhRXfiGAr0VWLe7X/AEVoVQ3D+BXDws8jB7mQadh0UeQqZp6hAUMOC5fan9QnGabI8NpFFFFPpBFFFFCElLRRQhFFFFCF/9k=" width="32" height="32" alt="Logo Tshiska Store" style="border-radius:8px">Tshiska Store</a><a class="l" href="#catalogue">iPhone</a><a class="l" href="#commander">Commander</a><a class="l" href="#livraison">Livraison</a><a class="l" href="#contact">Contact</a><a class="bt" href="https://wa.me/243973519120" target="_blank" rel="noopener">WhatsApp</a><button id="mb" class="mb" type="button" aria-label="Menu" aria-expanded="false" aria-controls="mp"><span></span><span></span></button></div><div id="mp" class="mp" hidden><a href="#catalogue">iPhone</a><a href="#commander">Commander</a><a href="#livraison">Livraison</a><a href="#contact">Contact</a></div></nav>
+<nav><div class="w"><a class="br" href="#"><img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAoHBwgHBgoICAgLCgoLDhgQDg0NDh0VFhEYIx8lJCIfIiEmKzcvJik0KSEiMEExNDk7Pj4+JS5ESUM8SDc9Pjv/2wBDAQoLCw4NDhwQEBw7KCIoOzs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozv/wAARCABEAEADASIAAhEBAxEB/8QAHAAAAQUBAQEAAAAAAAAAAAAAAAEEBQYHCAMC/8QANxAAAgEEAAMEBgcJAAAAAAAAAQIDAAQFEQYhMRIiQVEHFGFxgZETNkJ0obPRFkNiZJKiscHh/8QAGAEAAwEBAAAAAAAAAAAAAAAAAAQFAwH/xAAmEQABBAIBAwMFAAAAAAAAAAACAAEDBBEhMQVR8BITgUGRwdHh/9oADAMBAAIRAxEAPwDYqKXVGq4ur4WSN3dFdWZDpgDzX31GZ7NLiII+yoeaQ91T00Op/wBVE8QyPiOIbfKRRhxJEVZSSASOXh7CPlUBk85eZURpc9jsxbICLrZNSbV/22KNtE3Cr1en+44SPsX5/X3WiWtzFeWsdzCdxyLta9FdGZlV1LJyYA8x76olnxZe21ots8cckaRmMdVPsOx5VZOFbYwYOJ232p2MpJ6nfIfgK3r3BnJhHttL2aRQC5F30piilo1T6QTfJevDHTnG/Q+uBCYROCULeAOiDo+dYtdemriu0u5bW4xOPimhcpJG6SbVh1B71bnVey/AXC+cv2v8jiY5rlwA8gd1La5DfZI2fbXVxZHc+mfN3UYW5xGImCnYDxOdf3V74j0hZnMXIht+HMEAvOSRoH7KD2978KoF5BHHnJrZF1El20YXf2Q5GvlW4XWM4e4YvpcfYYCER6V2YzybJI99J3CCONzw2e7snaQHLIwZfHOGf+svOPOnkJMRi2bxKwEA/DZp/HxnexxiNLS1VVGlVQwAHzqUwmFxWTxy3cmNjj7bEKqyueQOvE1IfsthevqK/wBbfrU6OtbJmMDbfnZUpbNMScDB9fP5Ubhc/lMveiJbe3WNecrgN3R8+pq0apvZ2Frj4jFaQrEhOyBs7PxpxVWvHIAYkLLqRYkjM8xjhktJS0GmEuuTr36zT/fm/MNb/wAa4yX6ZMjEhaPshJdfZ10Pu8KwC9+stx9+b8w11gyqykMAQeRB8awswNPG4OmKth68jGyz/BcSS4iMwSR/TW5O+yDplPjr9KuOPzmPyQAgnAkP7t+63y8fhUZkuDbS5Jks29WkPPs62h+Hh8KqeRxN9inAuYiqk92RDtSfYfOo7SW6TYJvULeeZVl46l58g/pJ/OPr8LT6KrHCeclu92N25eRF7Ubnqw8QfaKs9WYJhmBjFRZ4CgkcCRRRRWywXJ1/9Zbgfzz/AJhrqy4uYLSEy3EqxRggFmOhzrIOPPRZJaXzZ3AI0sLSiS4tBsshLbLJ5jxI6jw5dL/xRiclkmSS2dZIYxygHI78/I1jYkOONyAcutq8YSSMJlhlY0kSVA8bB1PRlOwah+Kri3hwc0cxHbl0sanqW31+FUpo8lj2KBLq3P8ACGX/ABSw43KZKXaW88rH7bg6HvJqRJ1E5AeNo9vpWY+mhGbSPJpt+bTzhRXfiGAr0VWLe7X/AEVoVQ3D+BXDws8jB7mQadh0UeQqZp6hAUMOC5fan9QnGabI8NpFFFFPpBFFFFCElLRRQhFFFFCF/9k=" width="32" height="32" alt="Logo Tshiska Store" style="border-radius:8px">Tshiska Store</a><a class="l" href="#catalogue">iPhone</a><a class="l" href="#commander">Commander</a><a class="l" href="#livraison">Livraison</a><a class="l" href="#contact">Contact</a><button class="cart-nav" id="cart-open" type="button" aria-label="Ouvrir le panier">Panier <span class="cart-count" id="cart-count">0</span></button><a class="bt" href="https://wa.me/243973519120" target="_blank" rel="noopener">WhatsApp</a><button id="mb" class="mb" type="button" aria-label="Menu" aria-expanded="false" aria-controls="mp"><span></span><span></span></button></div><div id="mp" class="mp" hidden><a href="#catalogue">iPhone</a><a href="#commander">Commander</a><a href="#livraison">Livraison</a><a href="#contact">Contact</a></div></nav>
 
 <header class="hero"><div class="w">
 <div><div class="eye">Lemba super, Kinshasa</div><h1>Votre iPhone au bon endroit.</h1><p>iPhones neufs, d’occasion et accessoires. Choisissez, commandez sur WhatsApp, recevez chez vous.</p><a class="bt" href="#catalogue">Voir les iPhone</a><a class="bt o" href="tel:+243973519120">Appeler</a></div>
@@ -190,7 +216,7 @@ input[aria-invalid="true"]{border-color:#B3261E;box-shadow:0 0 0 3px rgba(179,38
 
 <section id="commander"><div class="w">
 <h2>Commander</h2>
-<p class="sub">Remplissez ces champs. Votre commande s’ouvre dans WhatsApp, prête à envoyer.</p>
+<p class="sub">Remplissez ces champs. Votre panier ou votre sélection s’ouvre dans WhatsApp, prête à envoyer.</p>
 <form id="f">
 <label>Modèle<select id="cm"></select></label>
 <label>Stockage<select id="cs"></select></label>
@@ -222,6 +248,15 @@ input[aria-invalid="true"]{border-color:#B3261E;box-shadow:0 0 0 3px rgba(179,38
 </main>
 <footer><div class="w">Tshiska Store · Lemba super, Kinshasa</div></footer>
 <a class="bt wa" href="https://wa.me/243973519120" target="_blank" rel="noopener" aria-label="Écrire sur WhatsApp">WhatsApp</a>
+<div class="cart-backdrop" id="cart-backdrop" aria-hidden="true">
+  <section class="cart-panel" role="dialog" aria-modal="true" aria-labelledby="cart-title">
+    <div class="cart-head"><h2 id="cart-title">Votre panier</h2><button class="cart-close" id="cart-close" type="button" aria-label="Fermer le panier">×</button></div>
+    <div id="cart-items"></div>
+    <div class="cart-total"><span>Total estimé</span><span id="cart-total">0 $</span></div>
+    <div class="cart-actions"><button class="bt" id="cart-checkout" type="button">Finaliser ma commande</button><button class="bt o" id="cart-continue" type="button">Continuer mes achats</button></div>
+    <p class="cart-note">Les prix et la disponibilité seront confirmés par Tshiska Store avant validation définitive.</p>
+  </section>
+</div>
 
 <script>
 var G={"11":["iPhone 11","iPhone 11 Pro","iPhone 11 Pro Max"],"12":["iPhone 12 mini","iPhone 12","iPhone 12 Pro","iPhone 12 Pro Max"],"13":["iPhone 13 mini","iPhone 13","iPhone 13 Pro","iPhone 13 Pro Max"],"14":["iPhone 14","iPhone 14 Plus","iPhone 14 Pro","iPhone 14 Pro Max"],"15":["iPhone 15","iPhone 15 Plus","iPhone 15 Pro","iPhone 15 Pro Max"],"16":["iPhone 16e","iPhone 16","iPhone 16 Plus","iPhone 16 Pro","iPhone 16 Pro Max"],"17":["iPhone 17","iPhone Air","iPhone 17 Pro","iPhone 17 Pro Max"],"18":["iPhone 18 Pro","iPhone 18 Pro Max"]};
@@ -249,10 +284,44 @@ function render(){
   $("grid").innerHTML=L.length?L.map(function(x){
     var m=x.m,v=P[m],i=pick[m]||0,h="<article class='card'><div class='ph'><img loading='lazy' src='"+IMG[m]+"' alt='"+m+"'></div><small>Sorti en "+(Y[x.g]||"")+"</small><h3>"+m+"</h3><p>"+(D[m]||"")+"</p>";
     if(v){h+="<div class='sp'>"+v.map(function(s,j){return "<button data-m='"+m+"' data-i='"+j+"' aria-pressed='"+(j===i)+"'>"+s[0]+"</button>"}).join("")+"</div><div class='px'>"+v[i][1]+" $<span>carton scellé, "+v[i][0]+"</span></div>";
-      h+="<a class='bt' target='_blank' rel='noopener' href='"+wa("Bonjour Tshiska Store, je veux commander l’"+m+" "+v[i][0]+" à "+v[i][1]+" $. Est-il disponible ?")+"'>Commander</a>"}
+      h+="<button class='bt add-cart' type='button' data-add-cart='1' data-model='"+m+"' data-storage='"+v[i][0]+"' data-price='"+v[i][1]+"'>Ajouter au panier</button>"}
     else{h+="<div class='px'>Prix sur demande<span>Disponibilité et état à confirmer</span></div><a class='bt o' style='margin-top:10px' target='_blank' rel='noopener' href='"+wa("Bonjour Tshiska Store, je suis intéressé par l’"+m+". Est-il disponible et à quel prix ?")+"'>Demander le prix</a>"}
     return h+"</article>"}).join(""):"<p class='none'>Aucun modèle trouvé. Essayez un autre budget ou écrivez-nous sur WhatsApp.</p>";
 }
+
+var CART_KEY="tshiska-store-cart-v1",cart=[];
+try{cart=JSON.parse(localStorage.getItem(CART_KEY)||"[]");if(!Array.isArray(cart))cart=[]}catch(e){cart=[]}
+function saveCart(){try{localStorage.setItem(CART_KEY,JSON.stringify(cart))}catch(e){};drawCart()}
+function money(n){return Number(n).toLocaleString("fr-FR")+" $"}
+function cartQty(){return cart.reduce(function(a,x){return a+x.qty},0)}
+function drawCart(){
+  $("cart-count").textContent=cartQty();
+  var box=$("cart-items");
+  if(!cart.length){box.innerHTML="<div class='cart-empty'>Votre panier est vide.<br>Ajoutez un iPhone depuis le catalogue.</div>";$ ("cart-total").textContent="0 $";return}
+  box.innerHTML=cart.map(function(x,i){return "<div class='cart-line'><div><strong>"+x.model+"</strong><small>"+x.storage+" · "+money(x.price)+" / unité</small><div class='cart-controls'><button type='button' data-cart-action='minus' data-index='"+i+"' aria-label='Diminuer la quantité'>−</button><b>"+x.qty+"</b><button type='button' data-cart-action='plus' data-index='"+i+"' aria-label='Augmenter la quantité'>+</button><button type='button' class='cart-remove' data-cart-action='remove' data-index='"+i+"'>Retirer</button></div></div><div class='cart-line-price'>"+money(x.price*x.qty)+"</div></div>"}).join("");
+  $("cart-total").textContent=money(cart.reduce(function(a,x){return a+x.price*x.qty},0));
+}
+function openCart(){$("cart-backdrop").classList.add("open");$("cart-backdrop").setAttribute("aria-hidden","false");document.body.style.overflow="hidden"}
+function closeCart(){$("cart-backdrop").classList.remove("open");$("cart-backdrop").setAttribute("aria-hidden","true");document.body.style.overflow=""}
+$("cart-open").addEventListener("click",openCart);
+$("cart-close").addEventListener("click",closeCart);
+$("cart-continue").addEventListener("click",closeCart);
+$("cart-backdrop").addEventListener("click",function(e){if(e.target===$("cart-backdrop"))closeCart()});
+document.addEventListener("keydown",function(e){if(e.key==="Escape")closeCart()});
+$("grid").addEventListener("click",function(e){
+  var b=e.target.closest("[data-add-cart]");if(!b)return;
+  var model=b.dataset.model,storage=b.dataset.storage,price=Number(b.dataset.price),found=cart.find(function(x){return x.model===model&&x.storage===storage});
+  if(found)found.qty++;else cart.push({model:model,storage:storage,price:price,qty:1});
+  saveCart();var label=b.textContent;b.textContent="Ajouté au panier ✓";setTimeout(function(){b.textContent=label},1100);
+});
+$("cart-items").addEventListener("click",function(e){
+  var b=e.target.closest("[data-cart-action]");if(!b)return;var i=Number(b.dataset.index),a=b.dataset.cartAction;if(!cart[i])return;
+  if(a==="plus")cart[i].qty++;else if(a==="minus")cart[i].qty--;else if(a==="remove")cart.splice(i,1);
+  if(cart[i]&&cart[i].qty<1)cart.splice(i,1);saveCart();
+});
+$("cart-checkout").addEventListener("click",function(){if(!cart.length){closeCart();return}closeCart();$("commander").scrollIntoView({behavior:"smooth"});$("cn").focus({preventScroll:true});$("fm").textContent="Votre panier sera inclus dans le message WhatsApp. Complétez vos coordonnées ci-dessous."});
+drawCart();
+
 $("gens").addEventListener("click",function(e){var k=e.target.dataset.k;if(k){gen=k;chips();render()}});
 $("grid").addEventListener("click",function(e){var b=e.target.closest("[data-i]");if(b){pick[b.dataset.m]=+b.dataset.i;render()}});
 ["q","bg","so"].forEach(function(i){$(i).addEventListener("input",render)});
@@ -260,7 +329,9 @@ $("cm").innerHTML=all.map(function(x){return "<option>"+x.m+"</option>"}).join("
 function stock(){var v=P[$("cm").value];$("cs").innerHTML=v?v.map(function(s){return "<option>"+s[0]+" : "+s[1]+" $</option>"}).join(""):"<option>Stockage à confirmer</option>"}
 $("cm").addEventListener("change",stock);stock();
 $("f").addEventListener("submit",function(e){e.preventDefault();
-  var t="Bonjour Tshiska Store, je veux commander :\nModèle : "+$("cm").value+"\nStockage : "+$("cs").value+"\nMode : "+$("cl").value+"\nQuartier : "+$("cq").value+"\nTéléphone : "+$("ct").value+"\nNom : "+$("cn").value;
+  var itemsText=cart.length?cart.map(function(x){return "- "+x.model+" / "+x.storage+" x "+x.qty+" = "+(x.price*x.qty)+" $"}).join("\n"):"- "+$("cm").value+" / "+$("cs").value;
+  var cartTotal=cart.reduce(function(a,x){return a+x.price*x.qty},0);
+  var t="Bonjour Tshiska Store, je veux commander :\n"+itemsText+(cart.length?"\nTotal estimé : "+cartTotal+" $":"")+"\nMode : "+$("cl").value+"\nQuartier : "+$("cq").value+"\nTéléphone : "+$("ct").value+"\nNom : "+$("cn").value;
   if(!chk())return;
   var sb=$("sb");sb.disabled=true;sb.textContent="Ouverture de WhatsApp…";
   var w=window.open(wa(t),"_blank");
