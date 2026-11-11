@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#111111">
+<title>Administration — Tshiska Store</title>
+<style>
+:root{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#171717;background:#f4f4f5}
+*{box-sizing:border-box}body{margin:0}.top{background:#111;color:#fff;padding:18px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px}.brand{font-weight:900;letter-spacing:.3px}.brand span{color:#f26a0f}.top small{display:block;color:#aaa;font-weight:500;margin-top:4px}.wrap{max-width:1000px;margin:26px auto;padding:0 15px}.panel{background:#fff;border:1px solid #e4e4e7;border-radius:16px;padding:20px;box-shadow:0 8px 30px #00000008;margin-bottom:18px}h1,h2{margin:0 0 14px}h1{font-size:24px}h2{font-size:19px}.muted{color:#71717a;font-size:14px;line-height:1.5}.field{display:grid;gap:6px;margin:12px 0}label{font-size:13px;font-weight:700}input,textarea,select{width:100%;padding:12px;border:1px solid #d4d4d8;border-radius:10px;font:inherit;background:#fff;color:#171717}textarea{min-height:82px;resize:vertical}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 14px}.btn{border:0;border-radius:10px;padding:11px 15px;background:#f26a0f;color:white;font-weight:800;font-size:14px;cursor:pointer}.btn.dark{background:#222}.btn.light{background:#eee;color:#222}.btn.danger{background:#b42318}.btn:disabled{opacity:.55;cursor:wait}.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.hidden{display:none!important}.msg{padding:11px 13px;border-radius:10px;background:#fff7ed;color:#9a3412;font-size:14px;margin:12px 0;white-space:pre-wrap}.msg.ok{background:#ecfdf3;color:#067647}.bar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.tablewrap{overflow-x:auto}table{border-collapse:collapse;width:100%;min-width:620px}th,td{text-align:left;padding:11px 9px;border-bottom:1px solid #eee;font-size:13px}th{color:#71717a;font-size:12px}.status{display:inline-block;border-radius:99px;padding:4px 8px;background:#f4f4f5;font-size:11px;font-weight:700}.status.off{background:#fee2e2;color:#991b1b}.status.on{background:#dcfce7;color:#166534}.login{max-width:430px;margin:8vh auto}.check{display:flex;align-items:center;gap:9px;font-size:14px}.check input{width:auto}.foot{text-align:center;color:#888;font-size:12px;padding:12px}
+@media(max-width:600px){.grid{grid-template-columns:1fr}.panel{padding:16px}.wrap{margin:16px auto}.top{padding:15px}.top .mutedtop{font-size:12px}}
+</style>
+</head>
+<body>
+<header class="top"><div class="brand">TSHISKA <span>STORE</span><small>Administration</small></div><div class="actions"><span id="who" class="mutedtop"></span><button id="logout" class="btn dark hidden" type="button">Déconnexion</button></div></header>
+<main class="wrap">
+<section id="loginPanel" class="panel login">
+<h1>Connexion administrateur</h1>
+<p class="muted">Connectez-vous avec le compte créé dans Supabase Authentication.</p>
+<form id="loginForm">
+<div class="field"><label for="email">Adresse e-mail</label><input id="email" type="email" autocomplete="username" required></div>
+<div class="field"><label for="password">Mot de passe</label><input id="password" type="password" autocomplete="current-password" required></div>
+<button id="loginBtn" class="btn" type="submit">Se connecter</button>
+</form><div id="loginMsg" class="msg hidden" role="alert"></div>
+</section>
+<section id="appPanel" class="hidden">
+<div class="panel">
+<div class="bar"><div><h1>Gestion des produits</h1><p class="muted">Ajoutez, modifiez ou désactivez les produits de votre boutique.</p></div><button id="newBtn" class="btn" type="button">＋ Nouveau produit</button></div>
+<div id="appMsg" class="msg hidden" role="status"></div>
+</div>
+<section id="formPanel" class="panel hidden">
+<h2 id="formTitle">Ajouter un produit</h2>
+<form id="productForm">
+<input id="productId" type="hidden">
+<div class="grid">
+<div class="field"><label for="name">Nom du produit *</label><input id="name" required placeholder="iPhone 13 Pro Max"></div>
+<div class="field"><label for="modele">Modèle / variante</label><input id="modele" placeholder="256 Go, noir"></div>
+<div class="field"><label for="price">Prix *</label><input id="price" type="number" min="0" step="0.01" required placeholder="450"></div>
+<div class="field"><label for="currency">Devise</label><select id="currency"><option value="USD">USD ($)</option><option value="CDF">CDF (FC)</option></select></div>
+<div class="field"><label for="stock">Stock</label><input id="stock" type="number" min="0" step="1" value="0"></div>
+<div class="field"><label for="photo">Photo du produit</label><input id="photo" type="file" accept="image/jpeg,image/png,image/webp"><span class="muted">JPG, PNG ou WEBP — 5 Mo maximum.</span></div>
+</div>
+<div class="field"><label for="description">Description</label><textarea id="description" placeholder="État, capacité, accessoires..."></textarea></div>
+<label class="check"><input id="active" type="checkbox" checked> Produit visible dans la boutique</label>
+<div class="actions" style="margin-top:16px"><button id="saveBtn" class="btn" type="submit">Enregistrer</button><button id="cancelBtn" class="btn light" type="button">Annuler</button></div>
+</form>
+</section>
+<section class="panel">
+<div class="bar"><h2>Produits enregistrés</h2><button id="refreshBtn" class="btn light" type="button">Actualiser</button></div>
+<div class="tablewrap"><table><thead><tr><th>Produit</th><th>Prix</th><th>Stock</th><th>Visibilité</th><th>Actions</th></tr></thead><tbody id="productsBody"><tr><td colspan="5">Chargement…</td></tr></tbody></table></div>
+</section>
+</section>
+</main>
+<div class="foot">Tshiska Store · Espace réservé à l’administration</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+'use strict';
+const SUPABASE_URL='https://fosfpvayuzrsdiknnjkf.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY='sb_publishable_mXXZvYdyF-7A9N7YUhoQdg_-YmIY8Mz';
+const client=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
+const $=id=>document.getElementById(id);
+let products=[];
+function message(id,text,ok){const el=$(id);el.textContent=text;el.classList.remove('hidden','ok');if(ok)el.classList.add('ok')}
+function clearMessage(id){$(id).classList.add('hidden')}
+function money(p,c){return Number(p||0).toLocaleString('fr-FR')+(c==='CDF'?' FC':' $')}
+function escapeHtml(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function showLogin(){ $('loginPanel').classList.remove('hidden');$('appPanel').classList.add('hidden');$('logout').classList.add('hidden');$('who').textContent='';}
+function showApp(email){$('loginPanel').classList.add('hidden');$('appPanel').classList.remove('hidden');$('logout').classList.remove('hidden');$('who').textContent=email||'';}
+async function checkAdmin(){
+ const {data:{session}}=await client.auth.getSession();
+ if(!session){showLogin();return}
+ const {data,error}=await client.rpc('is_admin');
+ if(error){await client.auth.signOut();showLogin();message('loginMsg',"Connexion vérifiée, mais Supabase n'a pas autorisé la vérification administrateur. Détail : "+error.message);return}
+ if(data!==true){await client.auth.signOut();showLogin();message('loginMsg',"Ce compte n'est pas autorisé comme administrateur.");return}
+ showApp(session.user.email);await loadProducts();
+}
+async function loadProducts(){
+ $('productsBody').innerHTML='<tr><td colspan="5">Chargement…</td></tr>';
+ const {data,error}=await client.from('products').select('*').order('created_at',{ascending:false});
+ if(error){$('productsBody').innerHTML='<tr><td colspan="5">Erreur de chargement.</td></tr>';message('appMsg','Impossible de lire les produits : '+error.message);return}
+ products=data||[];
+ if(!products.length){$('productsBody').innerHTML='<tr><td colspan="5">Aucun produit pour le moment. Appuyez sur « Nouveau produit » pour commencer.</td></tr>';return}
+ $('productsBody').innerHTML=products.map(p=>`<tr><td><strong>${escapeHtml(p.name)}</strong><br><span class="muted">${escapeHtml(p.modele||'')}</span></td><td>${escapeHtml(money(p.price,p.currency))}</td><td>${Number(p.stock||0)}</td><td><span class="status ${p.is_active?'on':'off'}">${p.is_active?'Visible':'Masqué'}</span></td><td><div class="actions"><button class="btn light" data-edit="${p.id}" type="button">Modifier</button><button class="btn danger" data-delete="${p.id}" type="button">Supprimer</button></div></td></tr>`).join('');
+}
+function openForm(p){
+ $('productForm').reset();$('productId').value=p?.id||'';$('formTitle').textContent=p?'Modifier le produit':'Ajouter un produit';
+ $('name').value=p?.name||'';$('modele').value=p?.modele||'';$('price').value=p?.price??'';$('currency').value=p?.currency||'USD';$('stock').value=p?.stock??0;$('description').value=p?.description||'';$('active').checked=p?.is_active??true;$('formPanel').classList.remove('hidden');$('formPanel').scrollIntoView({behavior:'smooth',block:'start'});
+}
+$('loginForm').addEventListener('submit',async e=>{
+ e.preventDefault();clearMessage('loginMsg');$('loginBtn').disabled=true;$('loginBtn').textContent='Connexion…';
+ const {error}=await client.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});
+ $('loginBtn').disabled=false;$('loginBtn').textContent='Se connecter';
+ if(error){message('loginMsg','Connexion impossible : '+error.message);return}
+ await checkAdmin();
+});
+$('logout').addEventListener('click',async()=>{await client.auth.signOut();showLogin()});
+$('newBtn').addEventListener('click',()=>openForm(null));
+$('cancelBtn').addEventListener('click',()=>$('formPanel').classList.add('hidden'));
+$('refreshBtn').addEventListener('click',loadProducts);
+$('productsBody').addEventListener('click',async e=>{
+ const edit=e.target.closest('[data-edit]');const del=e.target.closest('[data-delete]');
+ if(edit){const p=products.find(x=>x.id===edit.dataset.edit);if(p)openForm(p)}
+ if(del){const p=products.find(x=>x.id===del.dataset.delete);if(!p)return;if(!confirm('Supprimer « '+p.name+' » ?'))return;
+ const {error}=await client.from('products').delete().eq('id',p.id);
+ if(error){message('appMsg','Suppression impossible : '+error.message);return}message('appMsg','Produit supprimé.',true);await loadProducts()}
+});
+$('productForm').addEventListener('submit',async e=>{
+ e.preventDefault();clearMessage('appMsg');$('saveBtn').disabled=true;$('saveBtn').textContent='Enregistrement…';
+ try{
+  let imageUrl=products.find(p=>p.id===$('productId').value)?.image_url||null;
+  const file=$('photo').files[0];
+  if(file){
+   if(file.size>5*1024*1024)throw new Error('La photo dépasse 5 Mo.');
+   if(!['image/jpeg','image/png','image/webp'].includes(file.type))throw new Error('Format accepté : JPG, PNG ou WEBP.');
+   const ext=file.type==='image/png'?'png':file.type==='image/webp'?'webp':'jpg';
+   const path='products/'+Date.now()+'-'+Math.random().toString(36).slice(2)+'.'+ext;
+   const up=await client.storage.from('product-images').upload(path,file,{contentType:file.type,upsert:false});
+   if(up.error)throw up.error;
+   imageUrl=client.storage.from('product-images').getPublicUrl(path).data.publicUrl;
+  }
+  const row={name:$('name').value.trim(),modele:$('modele').value.trim(),description:$('description').value.trim(),price:Number($('price').value),currency:$('currency').value,image_url:imageUrl,stock:Math.max(0,parseInt($('stock').value||'0',10)),is_active:$('active').checked,updated_at:new Date().toISOString()};
+  if(!row.name)throw new Error('Le nom du produit est obligatoire.');
+  const id=$('productId').value;
+  const result=id?await client.from('products').update(row).eq('id',id):await client.from('products').insert(row);
+  if(result.error)throw result.error;
+  $('formPanel').classList.add('hidden');message('appMsg',id?'Produit modifié avec succès.':'Produit ajouté avec succès.',true);await loadProducts();
+ }catch(err){message('appMsg','Enregistrement impossible : '+(err.message||String(err)))}
+ finally{$('saveBtn').disabled=false;$('saveBtn').textContent='Enregistrer'}
+});
+checkAdmin().catch(err=>{showLogin();message('loginMsg','Erreur : '+err.message)});
+})();
+</script>
+</body>
+</html>
