@@ -258,6 +258,7 @@ input[aria-invalid="true"]{border-color:#B3261E;box-shadow:0 0 0 3px rgba(179,38
   </section>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 var G={"11":["iPhone 11","iPhone 11 Pro","iPhone 11 Pro Max"],"12":["iPhone 12 mini","iPhone 12","iPhone 12 Pro","iPhone 12 Pro Max"],"13":["iPhone 13 mini","iPhone 13","iPhone 13 Pro","iPhone 13 Pro Max"],"14":["iPhone 14","iPhone 14 Plus","iPhone 14 Pro","iPhone 14 Pro Max"],"15":["iPhone 15","iPhone 15 Plus","iPhone 15 Pro","iPhone 15 Pro Max"],"16":["iPhone 16e","iPhone 16","iPhone 16 Plus","iPhone 16 Pro","iPhone 16 Pro Max"],"17":["iPhone 17","iPhone Air","iPhone 17 Pro","iPhone 17 Pro Max"],"18":["iPhone 18 Pro","iPhone 18 Pro Max"]};
 var D={"iPhone 11":"Double caméra et bonne batterie : le plus abordable de la gamme.","iPhone 11 Pro":"Triple caméra et écran OLED dans un format compact.","iPhone 11 Pro Max":"Grand écran OLED, triple caméra et très bonne autonomie.","iPhone 12 mini":"Très petit (5,4 pouces), avec écran OLED et 5G.","iPhone 12":"Écran OLED 6,1 pouces et 5G.","iPhone 12 Pro":"Triple caméra, écran OLED et cadre en acier.","iPhone 12 Pro Max":"Grand écran 6,7 pouces et capteur photo plus grand que sur le 12 Pro.","iPhone 13 mini":"Format compact avec la puce A15 et une meilleure batterie que le 12 mini.","iPhone 13":"Puce A15, meilleure autonomie que le 12 et mode Cinéma en vidéo.","iPhone 13 Pro":"Écran fluide 120 Hz et triple caméra.","iPhone 13 Pro Max":"Écran fluide 120 Hz de 6,7 pouces et très grande autonomie.","iPhone 14":"Caméra principale améliorée et détection d’accident.","iPhone 14 Plus":"Grand écran 6,7 pouces et très longue autonomie.","iPhone 14 Pro":"Dynamic Island, écran toujours allumé et caméra principale de 48 mégapixels.","iPhone 14 Pro Max":"L’équipement du 14 Pro avec un grand écran 6,7 pouces.","iPhone 15":"Dynamic Island, port USB-C et caméra de 48 mégapixels.","iPhone 15 Plus":"Les atouts du 15 avec un grand écran 6,7 pouces.","iPhone 15 Pro":"Boîtier en titane, USB-C et bouton Action.","iPhone 15 Pro Max":"Zoom optique 5x et boîtier en titane.","iPhone 16e":"Puce A18, USB-C et Face ID à un prix plus bas que le 16.","iPhone 16":"Puce A18, bouton Action et bouton de contrôle de la caméra.","iPhone 16 Plus":"Les atouts du 16 avec un grand écran et une longue autonomie.","iPhone 16 Pro":"Puce A18 Pro, écran 6,3 pouces et ultra grand-angle de 48 mégapixels.","iPhone 16 Pro Max":"Écran 6,9 pouces, zoom 5x et très grande autonomie.","iPhone 17":"Écran 6,3 pouces à 120 Hz et 256 Go de stockage de base.","iPhone Air":"Le plus fin des iPhone, avec un boîtier en titane.","iPhone 17 Pro":"Triple caméra de 48 mégapixels et refroidissement amélioré.","iPhone 17 Pro Max":"Grand écran 6,9 pouces, triple caméra de 48 mégapixels et très grande autonomie.","iPhone 18 Pro":"Caméra principale de 48 mégapixels à ouverture variable et puce A20 Pro.","iPhone 18 Pro Max":"La caméra du 18 Pro et, selon Apple, la plus grande hausse d’autonomie sur un iPhone."};
@@ -271,8 +272,35 @@ var gen="all",pick={};
 function wa(t){return "https://wa.me/"+NUM+"?text="+encodeURIComponent(t)}
 function chips(){var ks=["all"].concat(Object.keys(G).reverse());
   $("gens").innerHTML=ks.map(function(k){return "<button data-k='"+k+"' aria-pressed='"+(k===gen)+"'>"+(k==="all"?"Tous":"iPhone "+k)+"</button>"}).join("")}
+var dbCatalog=null;
+function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 function render(){
-  var q=$("q").value.trim().toLowerCase(),bud=+$("bg").value,so=$("so").value;
+  var q=$("q").value.trim().toLowerCase(),bud=+$ ("bg").value,so=$("so").value;
+  if(dbCatalog){
+    var grouped={};
+    dbCatalog.forEach(function(p){var n=p.name||'iPhone';(grouped[n]||(grouped[n]=[])).push(p)});
+    var names=all.map(function(x){return x.m});
+    Object.keys(grouped).forEach(function(n){if(names.indexOf(n)<0)names.push(n)});
+    var L=names.map(function(n){
+      var base=all.find(function(x){return x.m===n}),match=n.match(/iPhone\s+(\d{2})/i);
+      var rows=grouped[n]||((P[n]||[]).map(function(v){return {name:n,model:v[0],price:v[1],currency:'USD',stock:null,description:D[n]||'',image_url:IMG[n]||null}}));
+      if(!rows.length)rows=[{name:n,model:'',price:0,currency:'USD',stock:null,description:D[n]||'',image_url:IMG[n]||null}];
+      return {m:n,g:base?base.g:(match?match[1]:'0'),rows:rows};
+    });
+    L=L.filter(function(x){if(gen!=="all"&&x.g!==gen)return false;if(q&&x.m.toLowerCase().indexOf(q)<0)return false;if(bud&&!x.rows.some(function(r){return Number(r.price)>0&&Number(r.price)<=bud}))return false;return true});
+    if(so==="p")L.sort(function(a,b){var ap=a.rows.map(function(r){return Number(r.price)}).filter(function(v){return v>0}),bp=b.rows.map(function(r){return Number(r.price)}).filter(function(v){return v>0});return (ap.length?Math.min.apply(null,ap):9e9)-(bp.length?Math.min.apply(null,bp):9e9)});else L.sort(function(a,b){return Number(b.g)-Number(a.g)});
+    $("gi").textContent=gen!=="all"?H[gen]||"":"";
+    $("grid").innerHTML=L.length?L.map(function(x){
+      var rows=x.rows.slice().sort(function(a,b){return Number(a.price)-Number(b.price)}),i=Math.min(pick[x.m]||0,rows.length-1),r=rows[i],photo=r.image_url||IMG[x.m]||'',desc=r.description||D[x.m]||'',h="<article class='card'><div class='ph'><img loading='lazy' src='"+esc(photo)+"' alt='"+esc(x.m)+"'></div><small>"+(Y[x.g]?"Sorti en "+Y[x.g]:"Tshiska Store")+"</small><h3>"+esc(x.m)+"</h3><p>"+esc(desc)+"</p>";
+      if(rows.length>1)h+="<div class='sp'>"+rows.map(function(v,j){return "<button data-db-model='"+esc(x.m)+"' data-db-i='"+j+"' aria-pressed='"+(j===i)+"'>"+esc(v.model||'Standard')+"</button>"}).join("")+"</div>";
+      if(Number(r.price)>0){h+="<div class='px'>"+Number(r.price).toLocaleString('fr-FR')+" "+(r.currency==='CDF'?'FC':'$')+"<span>"+esc(r.model||'Prix confirmé')+" · Stock : "+Number(r.stock||0)+"</span></div>";
+        if(r.stock==null||Number(r.stock)>0)h+="<button class='bt add-cart' type='button' data-add-cart='1' data-model='"+esc(x.m)+"' data-storage='"+esc(r.model||'Standard')+"' data-price='"+Number(r.price)+"'>Ajouter au panier</button>";
+        else h+="<div class='px'><span>Actuellement indisponible</span></div>";
+      }else h+="<div class='px'>Prix sur demande<span>Disponibilité et état à confirmer</span></div><a class='bt o' style='margin-top:10px' target='_blank' rel='noopener' href='"+wa("Bonjour Tshiska Store, je suis intéressé par l’"+x.m+". Est-il disponible et à quel prix ?")+"'>Demander le prix</a>";
+      return h+"</article>";
+    }).join(""):"<p class='none'>Aucun modèle trouvé. Essayez un autre budget ou écrivez-nous sur WhatsApp.</p>";
+    return;
+  }
   var L=all.filter(function(x){
     if(gen!=="all"&&x.g!==gen)return false;
     if(q&&x.m.toLowerCase().indexOf(q)<0)return false;
@@ -324,6 +352,7 @@ drawCart();
 
 $("gens").addEventListener("click",function(e){var k=e.target.dataset.k;if(k){gen=k;chips();render()}});
 $("grid").addEventListener("click",function(e){var b=e.target.closest("[data-i]");if(b){pick[b.dataset.m]=+b.dataset.i;render()}});
+$("grid").addEventListener("click",function(e){var b=e.target.closest("[data-db-i]");if(b){pick[b.dataset.dbModel]=+b.dataset.dbI;render()}});
 ["q","bg","so"].forEach(function(i){$(i).addEventListener("input",render)});
 $("cm").innerHTML=all.map(function(x){return "<option>"+x.m+"</option>"}).join("");
 function stock(){var v=P[$("cm").value];$("cs").innerHTML=v?v.map(function(s){return "<option>"+s[0]+" : "+s[1]+" $</option>"}).join(""):"<option>Stockage à confirmer</option>"}
@@ -338,6 +367,15 @@ $("f").addEventListener("submit",function(e){e.preventDefault();
   setTimeout(function(){sb.disabled=false;sb.textContent="Envoyer ma commande sur WhatsApp";var m=$("fm");m.className="fm f ok";
     m.innerHTML=w?"Votre commande est prête dans WhatsApp. Appuyez sur envoyer pour la confirmer.":"Votre navigateur a bloqué l’ouverture. <a href='"+wa(t)+"' target='_blank' rel='noopener'>Ouvrir WhatsApp</a>"},900)});
 chips();render();
+async function loadStoreProducts(){
+  try{
+    var sb=window.supabase.createClient('https://fosfpvayuzrsdiknnjkf.supabase.co','sb_publishable_mXXZvYdyF-7A9N7YUhoQdg_-YmIY8Mz');
+    var result=await sb.from('products').select('id,name,model,description,price,currency,image_url,stock,is_active').eq('is_active',true).order('name');
+    if(result.error)throw result.error;
+    if(result.data&&result.data.length){dbCatalog=result.data;render()}
+  }catch(err){console.warn('Catalogue Supabase indisponible, affichage du catalogue local.',err)}
+}
+loadStoreProducts();
 function chk(){var m=$("fm"),n=$("cn"),t=$("ct"),q=$("cq"),d=$("cl").value.indexOf("Livraison")>-1,bad=null,msg="";
  [n,t,q].forEach(function(x){x.removeAttribute("aria-invalid")});
  if(!n.value.trim()){bad=n;msg="Indiquez votre nom."}
