@@ -45,6 +45,11 @@
 <div class="actions" style="margin-top:16px"><button id="saveBtn" class="btn" type="submit">Enregistrer</button><button id="cancelBtn" class="btn light" type="button">Annuler</button></div>
 </form>
 </section>
+<section class="panel" id="ordersPanel">
+<div class="bar"><div><h2>Commandes clients</h2><p class="muted">Les nouvelles commandes arrivent en attente. Confirmez avant de créer une facture.</p></div><button id="refreshOrdersBtn" class="btn light" type="button">Actualiser les commandes</button></div>
+<div id="ordersMsg" class="msg hidden" role="status"></div>
+<div id="ordersList"><p class="muted">Chargement des commandes…</p></div>
+</section>
 <section class="panel">
 <div class="bar"><h2>Produits enregistrés</h2><button id="refreshBtn" class="btn light" type="button">Actualiser</button></div>
 <div class="tablewrap"><table><thead><tr><th>Produit</th><th>Prix</th><th>Stock</th><th>Visibilité</th><th>Actions</th></tr></thead><tbody id="productsBody"><tr><td colspan="5">Chargement…</td></tr></tbody></table></div>
@@ -53,6 +58,7 @@
 </main>
 <div class="foot">Tshiska Store · Espace réservé à l’administration</div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script>
 (function(){
 'use strict';
@@ -67,13 +73,98 @@ function money(p,c){return Number(p||0).toLocaleString('fr-FR')+(c==='CDF'?' FC'
 function escapeHtml(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function showLogin(){ $('loginPanel').classList.remove('hidden');$('appPanel').classList.add('hidden');$('logout').classList.add('hidden');$('who').textContent='';}
 function showApp(email){$('loginPanel').classList.add('hidden');$('appPanel').classList.remove('hidden');$('logout').classList.remove('hidden');$('who').textContent=email||'';}
+
+let orders=[];
+function orderMessage(text,ok){const el=$('ordersMsg');el.textContent=text;el.classList.remove('hidden','ok');if(ok)el.classList.add('ok')}
+function orderDate(v){try{return new Date(v).toLocaleString('fr-FR')}catch(e){return v||''}}
+function orderStatus(s){return s==='pending'?'En attente':s==='confirmed'?'Confirmée':s==='rejected'?'Refusée':s}
+function orderTotal(o){return money(o.total,o.currency==='USD'?'USD':o.currency)}
+function safeItems(items){return Array.isArray(items)?items:[]}
+function renderOrders(){
+ const root=$('ordersList');
+ if(!orders.length){root.innerHTML='<p class="muted">Aucune commande enregistrée pour le moment.</p>';return}
+ root.innerHTML=orders.map(o=>{
+  const items=safeItems(o.items);
+  const lines=items.map(i=>'<li>'+escapeHtml(i.model||'')+' · '+escapeHtml(i.storage||'')+' · '+escapeHtml(i.color||'Couleur à préciser')+' × '+Number(i.quantity||1)+' — '+escapeHtml(money(i.line_total||0,'USD'))+'</li>').join('');
+  const actions=o.status==='pending'
+   ? '<button class="btn" data-order-confirm="'+o.id+'" type="button">Confirmer et créer la facture</button><button class="btn danger" data-order-reject="'+o.id+'" type="button">Refuser</button>'
+   : o.status==='confirmed'
+    ? '<button class="btn light" data-invoice="'+o.id+'" type="button">Télécharger la facture PDF</button><button class="btn light" data-send-invoice="'+o.id+'" type="button">Préparer WhatsApp</button>'
+    : '<span class="muted">Commande refusée</span>';
+  return '<article class="panel" style="margin-top:12px"><div class="bar"><div><strong>Commande '+escapeHtml(String(o.id).slice(0,8).toUpperCase())+'</strong><p class="muted">'+escapeHtml(orderDate(o.created_at))+' · '+escapeHtml(orderStatus(o.status))+'</p></div><strong>'+escapeHtml(orderTotal(o))+'</strong></div><p><b>Client :</b> '+escapeHtml(o.customer_name)+' · '+escapeHtml(o.customer_phone)+'</p><p><b>Mode :</b> '+escapeHtml(o.delivery_method||'')+' · <b>Quartier :</b> '+escapeHtml(o.neighborhood||'')+'</p><ul>'+lines+'</ul>'+(o.invoice_number?'<p><b>Facture :</b> '+escapeHtml(o.invoice_number)+'</p>':'')+'<div class="actions">'+actions+'</div></article>';
+ }).join('');
+}
+async function loadOrders(){
+ $('ordersList').innerHTML='<p class="muted">Chargement…</p>';
+ const {data,error}=await client.from('orders').select('*').order('created_at',{ascending:false});
+ if(error){$('ordersList').innerHTML='';orderMessage('Impossible de charger les commandes : '+error.message);return}
+ orders=data||[];renderOrders();
+}
+function invoiceNumber(){const d=new Date();return 'TS-'+d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')+'-'+Math.random().toString(36).slice(2,7).toUpperCase()}
+async function confirmOrder(id){
+ const o=orders.find(x=>x.id===id);if(!o)return;
+ if(!confirm('Confirmer cette commande et créer son numéro de facture ?'))return;
+ const number=o.invoice_number||invoiceNumber();
+ const {error}=await client.from('orders').update({status:'confirmed',invoice_number:number,confirmed_at:new Date().toISOString()}).eq('id',id);
+ if(error){orderMessage('Confirmation impossible : '+error.message);return}
+ orderMessage('Commande confirmée. La facture '+number+' est prête à être téléchargée.',true);await loadOrders();
+}
+async function rejectOrder(id){
+ if(!confirm('Refuser cette commande ?'))return;
+ const {error}=await client.from('orders').update({status:'rejected'}).eq('id',id);
+ if(error){orderMessage('Refus impossible : '+error.message);return}
+ orderMessage('Commande refusée.',true);await loadOrders();
+}
+const TSHISKA_LOGO='data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAoHBwgHBgoICAgLCgoLDhgQDg0NDh0VFhEYIx8lJCIfIiEmKzcvJik0KSEiMEExNDk7Pj4+JS5ESUM8SDc9Pjv/2wBDAQoLCw4NDhwQEBw7KCIoOzs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozv/wAARCABEAEADASIAAhEBAxEB/8QAHAAAAQUBAQEAAAAAAAAAAAAAAAEEBQYHCAMC/8QANxAAAgEEAAMEBgcJAAAAAAAAAQIDAAQFEQYhMRIiQVEHFGFxgZETNkJ0obPRFkNiZJKiscHh/8QAGAEAAwEBAAAAAAAAAAAAAAAAAAQFAwH/xAAmEQABBAIBAwMFAAAAAAAAAAACAAEDBBEhMQVR8BITgUGRwdHh/9oADAMBAAIRAxEAPwDYqKXVGq4ur4WSN3dFdWZDpgDzX31GZ7NLiII+yoeaQ91T00Op/wBVE8QyPiOIbfKRRhxJEVZSSASOXh7CPlUBk85eZURpc9jsxbICLrZNSbV/22KNtE3Cr1en+44SPsX5/X3WiWtzFeWsdzCdxyLta9FdGZlV1LJyYA8x76olnxZe21ots8cckaRmMdVPsOx5VZOFbYwYOJ232p2MpJ6nfIfgK3r3BnJhHttL2aRQC5F30piilo1T6QTfJevDHTnG/Q+uBCYROCULeAOiDo+dYtdemriu0u5bW4xOPimhcpJG6SbVh1B71bnVey/AXC+cv2v8jiY5rlwA8gd1La5DfZI2fbXVxZHc+mfN3UYW5xGImCnYDxOdf3V74j0hZnMXIht+HMEAvOSRoH7KD2978KoF5BHHnJrZF1El20YXf2Q5GvlW4XWM4e4YvpcfYYCER6V2YzybJI99J3CCONzw2e7snaQHLIwZfHOGf+svOPOnkJMRi2bxKwEA/DZp/HxnexxiNLS1VVGlVQwAHzqUwmFxWTxy3cmNjj7bEKqyueQOvE1IfsthevqK/wBbfrU6OtbJmMDbfnZUpbNMScDB9fP5Ubhc/lMveiJbe3WNecrgN3R8+pq0apvZ2Frj4jFaQrEhOyBs7PxpxVWvHIAYkLLqRYkjM8xjhktJS0GmEuuTr36zT/fm/MNb/wAa4yX6ZMjEhaPshJdfZ10Pu8KwC9+stx9+b8w11gyqykMAQeRB8awswNPG4OmKth68jGyz/BcSS4iMwSR/TW5O+yDplPjr9KuOPzmPyQAgnAkP7t+63y8fhUZkuDbS5Jks29WkPPs62h+Hh8KqeRxN9inAuYiqk92RDtSfYfOo7SW6TYJvULeeZVl46l58g/pJ/OPr8LT6KrHCeclu92N25eRF7Ubnqw8QfaKs9WYJhmBjFRZ4CgkcCRRRRWywXJ1/9Zbgfzz/AJhrqy4uYLSEy3EqxRggFmOhzrIOPPRZJaXzZ3AI0sLSiS4tBsshLbLJ5jxI6jw5dL/xRiclkmSS2dZIYxygHI78/I1jYkOONyAcutq8YSSMJlhlY0kSVA8bB1PRlOwah+Kri3hwc0cxHbl0sanqW31+FUpo8lj2KBLq3P8ACGX/ABSw43KZKXaW88rH7bg6HvJqRJ1E5AeNo9vpWY+mhGbSPJpt+bTzhRXfiGAr0VWLe7X/AEVoVQ3D+BXDws8jB7mQadh0UeQqZp6hAUMOC5fan9QnGabI8NpFFFFPpBFFFFCElLRRQhFFFFCF/9k=';
+function makeInvoice(o){
+ if(!window.jspdf||!window.jspdf.jsPDF){orderMessage('Le module PDF ne s’est pas chargé. Vérifiez votre connexion internet.');return null}
+ const {jsPDF}=window.jspdf,doc=new jsPDF();
+ const currency=o.currency==='CDF'?' FC':' $',items=safeItems(o.items);
+ doc.setFillColor(18,18,18);doc.rect(0,0,210,39,'F');
+ doc.setTextColor(255,255,255);try{doc.addImage(TSHISKA_LOGO,'JPEG',13,5,25,25)}catch(e){}doc.setFontSize(21);doc.setFont('helvetica','bold');doc.text('TSHISKA STORE',43,18);
+ doc.setFontSize(10);doc.setFont('helvetica','normal');doc.text('Votre partenaire technologique !',43,27);
+ doc.setTextColor(30,30,30);doc.setFontSize(17);doc.setFont('helvetica','bold');doc.text('FACTURE',14,55);
+ doc.setFontSize(10);doc.setFont('helvetica','normal');doc.text('N° : '+(o.invoice_number||'À attribuer'),14,64);
+ doc.text('Date : '+new Date(o.confirmed_at||o.created_at).toLocaleDateString('fr-FR'),14,71);
+ doc.text('Client : '+String(o.customer_name||''),115,55);
+ doc.text('Téléphone : '+String(o.customer_phone||''),115,62);
+ doc.text('Commune : '+String(o.commune||''),115,69);doc.text('Quartier : '+String(o.neighborhood||''),115,76);doc.text('Adresse : '+String(o.delivery_address||'Non précisé'),115,83);
+ let y=91;doc.setFillColor(242,126,36);doc.rect(14,y,182,9,'F');doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.text('Désignation',17,y+6);doc.text('Qté',125,y+6);doc.text('Prix unit.',145,y+6);doc.text('Total',176,y+6);
+ y+=16;doc.setTextColor(30,30,30);doc.setFont('helvetica','normal');
+ items.forEach((it)=>{
+  const name=String((it.model||'')+' / '+(it.storage||'')+' / '+(it.color||''));
+  const wrapped=doc.splitTextToSize(name,100);
+  if(y+Math.max(8,wrapped.length*5)>260){doc.addPage();y=20}
+  doc.text(wrapped,17,y);doc.text(String(it.quantity||1),127,y);doc.text(Number(it.unit_price||0).toLocaleString('fr-FR')+currency,145,y);doc.text(Number(it.line_total||0).toLocaleString('fr-FR')+currency,176,y);
+  y+=Math.max(10,wrapped.length*5+3);
+ });
+ y+=7;doc.setDrawColor(220,220,220);doc.line(14,y,196,y);y+=10;
+ doc.setFont('helvetica','bold');doc.setFontSize(13);doc.text('TOTAL : '+Number(o.total||0).toLocaleString('fr-FR')+currency,196,y,{align:'right'});
+ y+=18;doc.setFont('helvetica','normal');doc.setFontSize(9);doc.text('Merci pour votre confiance.',14,y);
+ doc.text('Tshiska Store · Lemba super, Kinshasa · +243 862 000 159',14,y+7);
+ return doc;
+}
+function downloadInvoice(id){
+ const o=orders.find(x=>x.id===id);if(!o||o.status!=='confirmed'||!o.invoice_number){orderMessage('La facture est disponible uniquement après confirmation.');return}
+ const doc=makeInvoice(o);if(doc)doc.save(o.invoice_number+'.pdf');
+}
+function prepareWhatsAppInvoice(id){
+ const o=orders.find(x=>x.id===id);if(!o||o.status!=='confirmed'||!o.invoice_number)return;
+ const phone=prompt('Numéro WhatsApp du client (modifiable) :',o.customer_phone||'');
+ if(!phone)return;
+ const text='Bonjour '+o.customer_name+', voici votre facture '+o.invoice_number+' de Tshiska Store. Le PDF vient d’être téléchargé : veuillez le joindre à ce message WhatsApp.';
+ const url='https://wa.me/'+phone.replace(/\D/g,'')+'?text='+encodeURIComponent(text);
+ const doc=makeInvoice(o);if(doc)doc.save(o.invoice_number+'.pdf');
+ window.open(url,'_blank','noopener');
+}
+
 async function checkAdmin(){
  const {data:{session}}=await client.auth.getSession();
  if(!session){showLogin();return}
  const {data,error}=await client.rpc('is_admin');
  if(error){await client.auth.signOut();showLogin();message('loginMsg',"Connexion vérifiée, mais Supabase n'a pas autorisé la vérification administrateur. Détail : "+error.message);return}
  if(data!==true){await client.auth.signOut();showLogin();message('loginMsg',"Ce compte n'est pas autorisé comme administrateur.");return}
- showApp(session.user.email);await loadProducts();
+ showApp(session.user.email);await loadProducts();await loadOrders();
 }
 async function loadProducts(){
  $('productsBody').innerHTML='<tr><td colspan="5">Chargement…</td></tr>';
@@ -98,6 +189,8 @@ $('logout').addEventListener('click',async()=>{await client.auth.signOut();showL
 $('newBtn').addEventListener('click',()=>openForm(null));
 $('cancelBtn').addEventListener('click',()=>$('formPanel').classList.add('hidden'));
 $('refreshBtn').addEventListener('click',loadProducts);
+$('refreshOrdersBtn').addEventListener('click',loadOrders);
+$('ordersList').addEventListener('click',e=>{const c=e.target.closest('[data-order-confirm]'),r=e.target.closest('[data-order-reject]'),i=e.target.closest('[data-invoice]'),w=e.target.closest('[data-send-invoice]');if(c)confirmOrder(c.dataset.orderConfirm);if(r)rejectOrder(r.dataset.orderReject);if(i)downloadInvoice(i.dataset.invoice);if(w)prepareWhatsAppInvoice(w.dataset.sendInvoice)});
 $('productsBody').addEventListener('click',async e=>{
  const edit=e.target.closest('[data-edit]');const del=e.target.closest('[data-delete]');
  if(edit){const p=products.find(x=>x.id===edit.dataset.edit);if(p)openForm(p)}
